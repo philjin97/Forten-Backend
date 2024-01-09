@@ -1,9 +1,55 @@
+version: "3.8"
+
 services:
-  web:
+
+  # redis:
+  #   image: redis
+
+
+  django:
+    container_name: django
     build: .
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/dockerpractice
+    volumes: 
+      - .:/usr/src/app/
     ports:
       - "8000:8000"
+    depends_on: 
+      # - redis
+      db:
+        condition: service_healthy
+    # restart:
+    #   always
+
+  # celery:
+  #   container_name: celery
+  #   build: .
+  #   command: celery --app dcelery worker -l INFO
+  #   volumes: 
+  #     - .:/usr/src/app/
+  #   depends_on: 
+  #     - redis
+  
+  db:
+    image: mysql
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: 'rootpass'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'pass'
+      MYSQL_DATABASE: 'backend'
+    ports:
+      - "3306:3306" 
+    volumes: 
+      - ./data:/usr/src/app/
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      retries: 5
+      timeout: 5s
       
+
+  
+  
+
+    

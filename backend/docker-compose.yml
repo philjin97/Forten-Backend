@@ -34,10 +34,10 @@ services:
     image: mysql
     container_name: db
     environment:
-      MYSQL_ROOT_PASSWORD: 'rootpass'
-      MYSQL_USER: 'user'
-      MYSQL_PASSWORD: 'pass'
-      MYSQL_DATABASE: 'backend'
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_USER: 'forten'
+      MYSQL_PASSWORD: 'forten'
+      MYSQL_DATABASE: 'forten'
     ports:
       - "3306:3306" 
     volumes: 

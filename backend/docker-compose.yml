@@ -1,23 +1,26 @@
 version: "3.8"
 
 services:
-
   # redis:
   #   image: redis
-
 
   django:
     container_name: django
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes: 
+    # command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn backend.wsgi:application -b 0.0.0.0:8000
+
+    volumes:
       - .:/usr/src/app/
     ports:
       - "8000:8000"
-    depends_on: 
+    depends_on:
       # - redis
       db:
         condition: service_healthy
+    entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
+    # entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py loaddata ./user/fixtures/academy_dump_file.json && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
+
     # restart:
     #   always
 
@@ -25,31 +28,35 @@ services:
   #   container_name: celery
   #   build: .
   #   command: celery --app dcelery worker -l INFO
-  #   volumes: 
+  #   volumes:
   #     - .:/usr/src/app/
-  #   depends_on: 
+  #   depends_on:
   #     - redis
-  
+
   db:
     image: mysql
     container_name: db
     environment:
-      MYSQL_ROOT_PASSWORD: 'root'
-      MYSQL_USER: 'forten'
-      MYSQL_PASSWORD: 'forten'
-      MYSQL_DATABASE: 'forten'
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_USER: "forten"
+      MYSQL_PASSWORD: "forten"
+      MYSQL_DATABASE: "forten"
     ports:
-      - "3306:3306" 
-    volumes: 
+      - "3306:3306"
+    volumes:
       - ./data:/usr/src/app/
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       retries: 5
       timeout: 5s
-      
 
-  
-  
-
-    
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile # You need to create this file
+    ports:
+      - "80:80"
+    depends_on:
+      - django

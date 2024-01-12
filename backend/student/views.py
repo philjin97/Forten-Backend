@@ -37,25 +37,18 @@ class StudentGetPostAPIView(APIView):
             # 결과 직렬화
             serialized_students = StudentSerializer(students, many=True).data
 
-            # if serialized_students.is_valid():
             for student in serialized_students:
                 feedbacks = Feedback.objects.filter(user_id = user_id, student_id = student['id'])
                 student['isFeedback'] = feedbacks.exists()
 
             return Response({
                 'message': '학생이 조회되었습니다.',
-                'data': serialized_students
+                'result': serialized_students
             }, status=status.HTTP_200_OK)
-
-            # return Response({
-            #     'message': '유효하지 않은 입력값입니다.',
-            #     'data': serialized_students.errors
-            # }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({
                 'message': '오류가 발생했습니다. ({})'.format(str(e)),
-                'data': []
             }, status=status.HTTP_400_BAD_REQUEST)
 
     # 학생 등록
@@ -72,18 +65,17 @@ class StudentGetPostAPIView(APIView):
                 logging.info(serialized_student.data)
                 return Response({
                     'message': '학생이 등록되었습니다.',
-                    'student_id': serialized_student.instance.pk
+                    'result': serialized_student.data
                 }, status=status.HTTP_200_OK)
             
             return Response({
                 'message': '유효하지 않은 입력값입니다.',
-                'data': serialized_student.errors
+                'result': serialized_student.errors
             }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({
                 'message': '오류가 발생했습니다. ({})'.format(str(e)),
-                'data': []
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -103,21 +95,14 @@ class ScoreGetPostAPIView(APIView):
             # 결과 직렬화
             serialized_scores = ScoreSerializer(scores, many=True)
 
-            # if serialized_scores.is_valid():
             return Response({
                 'message': '학생 성적이 조회되었습니다.',
-                'data': serialized_scores.data
+                'result': serialized_scores.data
             }, status=status.HTTP_200_OK)
-            
-            # return Response({
-            #     'message': '입력이 올바르지 않습니다.',
-            #     'data': []
-            # }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({
-                'message': '오류가 발생했습니다. ({})'.format(str(e)),
-                'data': []
+                'message': '오류가 발생했습니다. ({})'.format(str(e))
             }, status=status.HTTP_400_BAD_REQUEST)
 
     # 성적 등록
@@ -125,7 +110,7 @@ class ScoreGetPostAPIView(APIView):
         try:
             student = Student.objects.get(id=student_id)
         except Student.DoesNotExist:
-            return Response({"detail": "존재하지 않는 학생입니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "존재하지 않는 학생입니다."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             # body 데이터 serializer
@@ -141,16 +126,14 @@ class ScoreGetPostAPIView(APIView):
 
                 return Response({
                     'message': '학생 성적이 등록되었습니다.',
-                    'data': serialized_scores.data
+                    'result': serialized_scores.data
                 }, status=status.HTTP_200_OK)
 
             return Response({
-                'message': '입력이 올바르지 않습니다.',
-                'data': []
+                'message': '입력이 올바르지 않습니다.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({
-                'message': '오류가 발생했습니다. ({})'.format(str(e)),
-                'data': []
+                'message': '오류가 발생했습니다. ({})'.format(str(e))
             }, status=status.HTTP_400_BAD_REQUEST)

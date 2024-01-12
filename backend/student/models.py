@@ -5,7 +5,7 @@ from user.models import Academy
 # 학생 테이블
 class Student(models.Model):
   id = models.AutoField(primary_key=True)
-  academy_id = models.ForeignKey(Academy, related_name="academy_student", on_delete=models.CASCADE, null=False)
+  academy_id = models.ForeignKey(Academy, related_name="academy_student", on_delete=models.CASCADE, null=False, db_column="academy_id")
   name = models.CharField(max_length=20, null=False)
   birth = models.CharField(max_length=20, null=False)
   phone = models.CharField(max_length=20, null=True)
@@ -38,8 +38,8 @@ class Subject(models.Model):
   # 학생 성적 테이블   
 class StudentScore(models.Model):
   id = models.AutoField(primary_key=True)
-  student_id = models.ForeignKey(Student, related_name="student_studentScore", on_delete=models.CASCADE, null=False)
-  subject_id = models.ForeignKey(Subject, related_name="subject_studentScore", on_delete=models.CASCADE, null=False)
+  student_id = models.ForeignKey(Student, related_name="student_studentScore", on_delete=models.CASCADE, null=False, db_column="student_id")
+  subject_id = models.ForeignKey(Subject, related_name="subject_studentScore", on_delete=models.CASCADE, null=False, db_column="exam_id")
   exam_id = models.ForeignKey(Exam, related_name="exam", on_delete=models.CASCADE, null=False)
   type = models.CharField(max_length=20, null=False)
   score = models.BigIntegerField(null=False)

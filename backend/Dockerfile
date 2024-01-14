@@ -12,4 +12,4 @@ COPY . /backend/
 # Gunicorn 설치
 RUN pip install gunicorn
 
-CMD ["gunicorn", "backend.wsgi:application", "-b", "0.0.0.0:8000"]
+CMD ["gunicorn", "backend.wsgi:application", "-b", "0.0.0.0:8000", "-t", "90", "--keep alive", "90"]

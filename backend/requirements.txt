@@ -6,6 +6,7 @@ djangorestframework==3.14.0
 drf-yasg==1.21.7
 inflection==0.5.1
 mysqlclient==2.2.1
+openai==1.7.1
 packaging==23.2
 protobuf==4.21.9
 pycparser==2.21

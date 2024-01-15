@@ -10,7 +10,7 @@ class StudentSerializer(serializers.ModelSerializer):
 class StudentRegisterSerializer(serializers.ModelSerializer):
   class Meta:
     model = Student
-    fields = ["id", "academy_id", "name", "birth", "phone", "parent_name", "parent_phone"]
+    fields = ["id", "academy_id", "name", "birth", "phone", "school", "grade", "parent_name", "parent_phone"]
 
 class ScoreSerializer(serializers.ModelSerializer):
   class Meta:

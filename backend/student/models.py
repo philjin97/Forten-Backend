@@ -9,6 +9,8 @@ class Student(models.Model):
   name = models.CharField(max_length=20, null=False)
   birth = models.CharField(max_length=20, null=False)
   phone = models.CharField(max_length=20, null=True)
+  school = models.CharField(max_length=20, null=True)
+  grade = models.CharField(max_length=10, null=True)
   parent_name = models.CharField(max_length=20, null=False)
   parent_phone = models.CharField(max_length=20, null=False)
   created_at = models.DateTimeField(auto_now_add=True, null=False)

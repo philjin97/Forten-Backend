@@ -18,7 +18,7 @@ services:
       # - redis
       db:
         condition: service_healthy
-    entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
+    entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python manage.py collectstatic --noinput && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
     # entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py loaddata ./user/fixtures/academy_dump_file.json && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
 
     # restart:

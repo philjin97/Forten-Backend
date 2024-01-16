@@ -19,16 +19,13 @@ class UserRegister(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'academy_id': openapi.Schema(type=openapi.TYPE_STRING, description='학원아이디'),
+                'academy_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='학원아이디'),
                 'email': openapi.Schema(type=openapi.TYPE_STRING, description='이메일'),
                 'password': openapi.Schema(type=openapi.TYPE_STRING, description='비밀번호'),
                 'name': openapi.Schema(type=openapi.TYPE_STRING, description='회원 이름'),
                 'phone': openapi.Schema(type=openapi.TYPE_STRING, description='학생 전화번호'),
                 'birth': openapi.Schema(type=openapi.TYPE_STRING, description='생년'),
                 'role': openapi.Schema(type=openapi.TYPE_STRING, description='강사/컨설턴트'),
-                'created_at': openapi.Schema(type=openapi.TYPE_STRING, description='생성날짜'),
-                'updated_at': openapi.Schema(type=openapi.TYPE_STRING, description='수정날짜'),
-                'deleted_at': openapi.Schema(type=openapi.TYPE_STRING, description='삭제날짜'),
             },
             required=['email','name','password','phone','academy_id','birth','role']
         ),
@@ -126,16 +123,16 @@ class MemoUpdate(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='유저 아이디'),
-                'memo': openapi.Schema(type=openapi.TYPE_INTEGER, description='메모 내용'),
+                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='유저 아이디'),
+                'memo': openapi.Schema(type=openapi.TYPE_STRING, description='메모 내용'),
             },
-            required=['id'],
+            required=['user_id'],
         ),
         description="회원이 작성한 메모를 수정합니다.",
     )
     def put(self, request):
         try:
-            user = User.objects.get(id=request.data['id'])
+            user = User.objects.get(id=request.data['user_id'])
         except User.DoesNotExist:
             return Response({"message": "존재하지 않는 회원입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -188,6 +185,10 @@ class FavoriteAPIView(APIView):
     @swagger_auto_schema(
         summary="즐겨찾기 등록",
         tags=["User"],
+        manual_parameters=[
+            openapi.Parameter('user_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='회원 ID'),
+            openapi.Parameter('student_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, student_id='학생 ID'),
+        ],
         description="즐겨찾기를 합니다.",
     )
     def post(self, request, user_id, student_id):

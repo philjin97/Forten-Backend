@@ -6,6 +6,7 @@ from rest_framework import status
 from .models import User
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorator import api_view
 
 # Create your views here.
 
@@ -137,3 +138,4 @@ class MemoUpdate(APIView):
             'message': '유효하지 않은 입력값입니다.',
             'result': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    

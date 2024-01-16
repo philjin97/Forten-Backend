@@ -7,6 +7,8 @@ from feedback.models import Feedback
 from .serializers import StudentScoreSerializer
 from openai import OpenAI
 from backend.my_settings import openai_secret_key
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 # Create your views here.
 

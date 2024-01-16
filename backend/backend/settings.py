@@ -143,4 +143,7 @@ LOGGING = {
     },
 }
 
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "db+mysql://forten:forten@localhost/forten"
+
 

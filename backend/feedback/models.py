@@ -5,7 +5,7 @@ from user.models import User
 # Create your models here.
 class Feedback(models.Model):
 	id = models.AutoField(primary_key=True)
-	user_id = models.ForeignKey(User, related_name="user", on_delete=models.CASCADE, null=False, db_column="user_id")
+	user_id = models.ForeignKey(User, related_name="user_feedback", on_delete=models.CASCADE, null=False, db_column="user_id")
 	student_id = models.ForeignKey(Student, related_name="student_feedback", on_delete=models.CASCADE, null=False, db_column="student_id")
 	student_rating = models.BigIntegerField(null=False)
 	parent_rating = models.BigIntegerField(null=True)

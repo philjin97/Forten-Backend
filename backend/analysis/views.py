@@ -12,17 +12,22 @@ from backend.my_settings import openai_secret_key
 
 class Rating(APIView):
 
+    @swagger_auto_schema(
+        summary="학생 평가 조회",
+        tags=["Feedback"],
+        manual_parameters=[
+            openapi.Parameter('student_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='학생 ID'),
+        ],
+        description="특정 학생의 평가를 모두 조회합니다",
+    )
     def get(self, request, student_id):
         try:
             student = Feedback.objects.filter(student_id=student_id)
 
-            avg_student_rating = 0
+            student_ratings = []
 
             for student_feedback in student:
-                avg_student_rating += student_feedback.student_rating 
-            
-            avg_student_rating = avg_student_rating//len(student)
-            
+                student_ratings.append(student_feedback.student_rating) 
             
             avg_parent_rating = 0
 
@@ -34,7 +39,7 @@ class Rating(APIView):
             message = {
                 "message": "평가 조회 성공",
                 "result": {
-                    "student_rating": avg_student_rating,
+                    "student_rating": student_ratings,
                     "parent_rating": avg_parent_rating
                 }
             }
@@ -60,6 +65,14 @@ class Rating(APIView):
 
 class Prompt(APIView):
 
+    @swagger_auto_schema(
+        summary="학생 프롬프트 조회",
+        tags=["Feedback"],
+        manual_parameters=[
+            openapi.Parameter('student_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='학생 ID'),
+        ],
+        description="특정 학생의 평가를 ChatGPT를 통해 요약합니다.",
+    )
     def get(self, request, student_id):
         feedbacks = Feedback.objects.filter(student_id=student_id)
         feedbacks_content = ''

@@ -34,8 +34,7 @@ class UserRegister(APIView):
     def post(self, request):
         try: 
             user = User.objects.get(email=request.data['email'])
-            return Response({'message': '존재하는 이메일입니다.'}, 
-                    status=status.HTTP_400_BAD_REQUEST) 
+            return Response({'message': '존재하는 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST) 
 
         except User.DoesNotExist:       
             serializer = UserRegisterSerializer(data=request.data)

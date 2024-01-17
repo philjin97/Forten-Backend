@@ -63,7 +63,7 @@ class StudentGetPostAPIView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'academy_id': openapi.Schema(type=openapi.TYPE_STRING, description='학원아이디'),
+                'academy_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='학원아이디'),
                 'name': openapi.Schema(type=openapi.TYPE_STRING, description='학생 이름'),
                 'birth': openapi.Schema(type=openapi.TYPE_STRING, description='생년'),
                 'phone': openapi.Schema(type=openapi.TYPE_STRING, description='학생 전화번호'),
@@ -148,11 +148,11 @@ class ScoreGetPostAPIView(APIView):
             items=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    'subject_id': openapi.Schema(type=openapi.TYPE_STRING, description='과목 아이디'),
-                    'exam_id': openapi.Schema(type=openapi.TYPE_STRING, description='시험 아이디'),
+                    'subject_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='과목 아이디'),
+                    'exam_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='시험 아이디'),
                     'type': openapi.Schema(type=openapi.TYPE_STRING, description='구분(상대/절대)'),
                     'score': openapi.Schema(type=openapi.TYPE_INTEGER, description='성적'),
-                    'grade': openapi.Schema(type=openapi.TYPE_INTEGER, description='학년'),
+                    'grade': openapi.Schema(type=openapi.TYPE_STRING, description='학년'),
                 },
                 required=['subject_id','exam_id', 'type', 'score', 'grade'],
             )

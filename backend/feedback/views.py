@@ -47,10 +47,10 @@ class FeedbackRegisterAPIView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'student_id': openapi.Schema(type=openapi.TYPE_STRING, description='학생 아이디'),
+                'student_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='학생 아이디'),
                 'student_rating': openapi.Schema(type=openapi.TYPE_INTEGER, description='학생 만족도'),
                 'parent_rating': openapi.Schema(type=openapi.TYPE_INTEGER, description='부모 만족도'),
-                'content': openapi.Schema(type=openapi.TYPE_INTEGER, description='평가 내용'),
+                'content': openapi.Schema(type=openapi.TYPE_STRING, description='평가 내용'),
             },
             required=['student_id', 'content'],
         ),
@@ -92,9 +92,10 @@ class FeedbackPutDeleteAPIView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
+                'student_id' : openapi.Schema(type=openapi.TYPE_INTEGER, description='학생 만족도'),
                 'student_rating': openapi.Schema(type=openapi.TYPE_INTEGER, description='학생 만족도'),
                 'parent_rating': openapi.Schema(type=openapi.TYPE_INTEGER, description='부모 만족도'),
-                'content': openapi.Schema(type=openapi.TYPE_INTEGER, description='평가 내용'),
+                'content': openapi.Schema(type=openapi.TYPE_STRING, description='평가 내용'),
             },
             required=['content'],
         ),
@@ -102,11 +103,15 @@ class FeedbackPutDeleteAPIView(APIView):
     )
     def put(self, request, user_id, feedback_id):
         try:
-            feedback = Feedback.objects.get(user_id=user_id, id=feedback_id)
+            feedback = Feedback.objects.get(id=feedback_id)
         except Feedback.DoesNotExist:
             return Response({"message": "존재하지 않는 평가입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        serialized_feedback = FeedbackSerializer(feedback, data=request.data)
+        data = request.data
+        data['id'] = feedback_id
+        data['user_id'] = user_id
+
+        serialized_feedback = FeedbackRegisterSerializer(feedback, data=data)
         if serialized_feedback.is_valid():
             serialized_feedback.save() # 데이터베이스에 저장
             return Response({

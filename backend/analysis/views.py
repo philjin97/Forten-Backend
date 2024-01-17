@@ -9,9 +9,7 @@ from openai import OpenAI
 from backend.my_settings import openai_secret_key
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from analysis.models import TemporaryPrompt
 
 # Create your views here.
 
@@ -79,7 +77,18 @@ class Prompt(APIView):
         description="특정 학생의 평가를 ChatGPT를 통해 요약합니다.",
     )
     def get(self, request, student_id):
+
+        # 비동기 데이터베이스 스캔
+        temporary = TemporaryPrompt.objects.filter(student_id=student_id)
+        if len(temporary) != 0:
+            message = {
+            "response": temporary[0].prompt
+            }
+            return Response(message, status.HTTP_200_OK) 
+        
+        # 없으면 생성
         feedbacks = Feedback.objects.filter(student_id=student_id)
+
         feedbacks_content = ''
         for feedback in feedbacks:
             feedbacks_content += feedback.content

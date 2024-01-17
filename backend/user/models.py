@@ -1,5 +1,4 @@
 from django.db import models
-from student.models import Student
 
 # Create your models here.
 
@@ -32,16 +31,9 @@ class User(models.Model):
     def __str__(self):
         return self.email
 
-<<<<<<< HEAD
-class Favorite(models.Model):
-    id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(User, related_name="user_favorite", on_delete=models.CASCADE, null=False, db_column="user_id")
-    student_id = models.ForeignKey(Student, related_name="student_favorite", on_delete=models.CASCADE, null=False, db_column="student_id")
-=======
 from student.models import Student
 
 class Favorite(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(User, related_name="user_favorite", on_delete=models.CASCADE, null=False, db_column="user_id")
     student_id = models.ForeignKey(Student, related_name="student_favorite", on_delete=models.CASCADE, null=False, db_column="student_id")
->>>>>>> 63d29a31358e7529631c14108a57f660bd0b05ec

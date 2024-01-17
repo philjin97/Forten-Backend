@@ -8,7 +8,7 @@ from student.models import Student
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorator import api_view
+from analysis.tasks import save_prompt_task
 
 # Create your views here.
 
@@ -205,6 +205,10 @@ class FavoriteAPIView(APIView):
             serialized_favorite = UserFavoriteSerializer(data=data)
 
             if serialized_favorite.is_valid():
+
+                # Celery Task 배정
+                save_prompt_task.delay(student_id)
+
                 serialized_favorite.save()
                 return Response({
                     'message': '즐겨찾기가 되었습니다.',

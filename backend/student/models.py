@@ -39,11 +39,15 @@ class Subject(models.Model):
 
   # 학생 성적 테이블   
 class StudentScore(models.Model):
+  TYPE = [
+    ('절대','절대'), 
+    ('상대','상대'),
+  ]
   id = models.AutoField(primary_key=True)
   student_id = models.ForeignKey(Student, related_name="student_studentScore", on_delete=models.CASCADE, null=False, db_column="student_id")
   subject_id = models.ForeignKey(Subject, related_name="subject_studentScore", on_delete=models.CASCADE, null=False, db_column="exam_id")
   exam_id = models.ForeignKey(Exam, related_name="exam", on_delete=models.CASCADE, null=False)
-  type = models.CharField(max_length=20, null=False)
+  type = models.CharField(choices=TYPE,max_length=20, null=False)
   score = models.BigIntegerField(null=False)
   grade = models.CharField(max_length=20, null=False)
   created_at = models.DateTimeField(auto_now_add=True, null=False)

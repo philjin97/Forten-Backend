@@ -10,6 +10,8 @@ from drf_yasg import openapi
 from .serializers import *
 import logging
 
+from user.models import User
+
 class StudentGetPostAPIView(APIView):
     # 학생 조회
     @swagger_auto_schema(
@@ -25,6 +27,11 @@ class StudentGetPostAPIView(APIView):
     def get(self, request):
         # 쿼리 매개변수 가져오기
         user_id = request.GET.get('id', '')
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'message': '존재하지 않는 회원입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
         student_id = request.GET.get('student_id', '')
         search = request.GET.get('search', '')
 
@@ -144,18 +151,24 @@ class ScoreGetPostAPIView(APIView):
             openapi.Parameter('student_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='학생 ID'),
         ],
         request_body=openapi.Schema(
-            type=openapi.TYPE_ARRAY,
-            items=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'subject_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='과목 아이디'),
-                    'exam_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='시험 아이디'),
-                    'type': openapi.Schema(type=openapi.TYPE_STRING, description='구분(상대/절대)'),
-                    'score': openapi.Schema(type=openapi.TYPE_INTEGER, description='성적'),
-                    'grade': openapi.Schema(type=openapi.TYPE_STRING, description='학년'),
-                },
-                required=['subject_id','exam_id', 'type', 'score', 'grade'],
-            )
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'scoreList': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'subject_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='과목 아이디'),
+                            'exam_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='시험 아이디'),
+                            'type': openapi.Schema(type=openapi.TYPE_STRING, description='구분(상대/절대)'),
+                            'score': openapi.Schema(type=openapi.TYPE_INTEGER, description='성적'),
+                            'grade': openapi.Schema(type=openapi.TYPE_STRING, description='학년'),
+                        },
+                        required=['subject_id', 'exam_id', 'type', 'score', 'grade'],
+                    ),
+                ),
+            },
+            required=['scoreList'],
         ),
         description="학생의 성적을 등록합니다.",
     )
@@ -167,7 +180,8 @@ class ScoreGetPostAPIView(APIView):
 
         try:
             # body 데이터 serializer
-            serialized_scores = ScoretRegisterSerializer(data=request.data, many=True)
+            scoreList = request.data.get('scoreList', [])
+            serialized_scores = ScoretRegisterSerializer(data=scoreList, many=True)
 
             if serialized_scores.is_valid():
                 # 모든 객체에 student_id를 추가

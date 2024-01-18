@@ -43,8 +43,7 @@ class StudentGetPostAPIView(APIView):
             elif search:
                 students = Student.objects.filter(Q(name__icontains=search)|Q(school__icontains=search)).distinct()
             else:
-                return Response({'message': '학생 아이디 혹은 검색어를 입력해주세요.'}, 
-                status=status.HTTP_400_BAD_REQUEST)
+                students = Student.objects.filter()
 
             # 결과 직렬화
             serialized_students = StudentSerializer(students, many=True).data

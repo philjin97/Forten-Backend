@@ -10,7 +10,7 @@ from openai import OpenAI
 from backend.my_settings import openai_secret_key
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from analysis.models import TemporaryPrompt
+# from analysis.models import TemporaryPrompt
 from django.core.cache import cache
 
 

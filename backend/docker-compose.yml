@@ -1,8 +1,9 @@
 version: "3.8"
 
 services:
-  # redis:
-  #   image: redis
+  redis:
+    container_name: redis
+    image: redis
 
   django:
     container_name: django
@@ -15,23 +16,23 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      # - redis
-      db:
-        condition: service_healthy
+        # redis:
+        db:
+          condition: service_healthy
     entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python manage.py collectstatic --noinput && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
     # entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py loaddata ./user/fixtures/academy_dump_file.json && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
 
     # restart:
     #   always
 
-  # celery:
-  #   container_name: celery
-  #   build: .
-  #   command: celery --app dcelery worker -l INFO
-  #   volumes:
-  #     - .:/usr/src/app/
-  #   depends_on:
-  #     - redis
+  celery:
+    container_name: celery
+    build: .
+    command: celery -A backend worker -l info
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - redis
 
   db:
     image: mysql

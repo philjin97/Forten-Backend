@@ -33,11 +33,16 @@ class Rating(APIView):
                 student_ratings.append(student_feedback.student_rating) 
             
             avg_parent_rating = 0
+            cnt = 0
 
             for student_feedback in student:
-                avg_parent_rating += student_feedback.parent_rating 
+                if student_feedback.parent_rating:
+                    avg_parent_rating += student_feedback.parent_rating 
+                    cnt += 1
+                else:
+                    continue
             
-            avg_parent_rating = avg_parent_rating//len(student)
+            avg_parent_rating = avg_parent_rating//cnt
 
             message = {
                 "message": "평가 조회 성공",

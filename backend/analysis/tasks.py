@@ -1,7 +1,7 @@
 from backend.my_settings import openai_secret_key
 from feedback.models import Feedback
-from .models import TemporaryPrompt
-from .serializers import TemporaryPromptSerializer
+# from .models import TemporaryPrompt
+# from .serializers import TemporaryPromptSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from celery import shared_task
@@ -33,14 +33,14 @@ def save_prompt_task(student_id):
 
    
 
-    serializer = TemporaryPromptSerializer(data=message)
-    if serializer.is_valid():
-        try:
-            cache.delete(student_id)
-            cache.set(student_id, response, 60 * 60)
+    # serializer = TemporaryPromptSerializer(data=message)
+    # if serializer.is_valid():
+    try:
+        cache.delete(student_id)
+        cache.set(student_id, response, 60 * 60)
 
-        except:
-            cache.set(student_id, response, 60 * 60)
+    except:
+        cache.set(student_id, response, 60 * 60)
         
         
         

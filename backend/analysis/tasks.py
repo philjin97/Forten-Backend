@@ -5,6 +5,8 @@ from .serializers import TemporaryPromptSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from celery import shared_task
+from django.core.cache import cache
+
 
 @shared_task()
 def save_prompt_task(student_id):
@@ -29,18 +31,29 @@ def save_prompt_task(student_id):
         "prompt": response
     }
 
+   
+
     serializer = TemporaryPromptSerializer(data=message)
     if serializer.is_valid():
         try:
-            feedback = TemporaryPrompt.objects.get(student_id=student_id)
-            serialized_feedback = TemporaryPromptSerializer(feedback, data = message)
-            if serialized_feedback.is_valid():
-                serialized_feedback.save()
-                return Response({"message": "수정 성공"}, status.HTTP_200_OK) 
-            return Response({"message": "수정 형식에 맞지 않음. 수정 실패"}, status.HTTP_400_BAD_REQUEST)
+            cache.delete(student_id)
+            cache.set(student_id, response, 60 * 60)
+
         except:
-            serializer.save()
-            return Response({"message": "저장 성공"}, status.HTTP_200_OK) 
+            cache.set(student_id, response, 60 * 60)
+        
+        
+        
+        # try:
+        #     feedback = TemporaryPrompt.objects.get(student_id=student_id)
+        #     serialized_feedback = TemporaryPromptSerializer(feedback, data = message)
+        #     if serialized_feedback.is_valid():
+        #         serialized_feedback.save()
+        #         return Response({"message": serialized_feedback.data}, status.HTTP_200_OK) 
+        #     return Response({"message": "수정 형식에 맞지 않음. 수정 실패"}, status.HTTP_400_BAD_REQUEST)
+        # except:
+        #     serializer.save()
+        #     return Response({"message": serializer.data}, status.HTTP_200_OK) 
         
     
     return Response({"message": "저장 실패"}, status.HTTP_400_BAD_REQUEST) 

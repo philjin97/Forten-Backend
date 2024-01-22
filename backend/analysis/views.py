@@ -12,6 +12,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 # from analysis.models import TemporaryPrompt
 from django.core.cache import cache
+# from analysis.tasks import prompt_task
 
 
 # Create your views here.
@@ -36,8 +37,8 @@ class Rating(APIView):
             for student_feedback in student:
                 student_ratings.append(student_feedback.student_rating) 
 
-                user_name = User.objects.filter(id=student_feedback.user_id)
-                feedback_user_name.append(user_name.name)
+                user_name = student_feedback.user_id.name
+                feedback_user_name.append(user_name)
             
             avg_parent_rating = 0
             cnt = 0
@@ -91,26 +92,8 @@ class Prompt(APIView):
     )
     def get(self, request, student_id):
 
-        try: 
-            prompt = cache.get(student_id)
-            message = {
-                "response": prompt
-            }
-            return Response(message, status.HTTP_200_OK)
-        
-        
+        if  cache.get(student_id) == None:
 
-        # 비동기로 미리 저장된 데이터 확인
-        # 캐시를 스캔
-        # temporary = TemporaryPrompt.objects.filter(student_id=student_id)
-        # if len(temporary) != 0:
-        #     message = {
-        #     "response": temporary[0].prompt
-        #     }
-            # return Response(message, status.HTTP_200_OK) 
-        
-        # 없으면 생성
-        except: 
             feedbacks = Feedback.objects.filter(student_id=student_id)
 
             feedbacks_content = ''
@@ -133,6 +116,27 @@ class Prompt(APIView):
             }
             
             return Response(message, status.HTTP_200_OK) 
+
+        else:
+            prompt = cache.get(student_id)
+            message = {
+                "response": prompt
+            }
+            return Response(message, status.HTTP_200_OK)
+    
+        # 비동기로 미리 저장된 데이터 확인
+        # 캐시를 스캔
+        # temporary = TemporaryPrompt.objects.filter(student_id=student_id)
+        # if len(temporary) != 0:
+        #     message = {
+        #     "response": temporary[0].prompt
+        #     }
+            # return Response(message, status.HTTP_200_OK) 
+        
+        # 없으면 생성
+
+        
+            
 
 
     

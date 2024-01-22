@@ -41,7 +41,7 @@ def save_prompt_task(student_id):
 
     except:
         cache.set(student_id, response, 60 * 60)
-        
+
         
         
         # try:
@@ -56,4 +56,4 @@ def save_prompt_task(student_id):
         #     return Response({"message": serializer.data}, status.HTTP_200_OK) 
         
     
-    return Response({"message": "저장 실패"}, status.HTTP_400_BAD_REQUEST) 
+    

@@ -7,9 +7,11 @@ services:
 
   django:
     container_name: django
-    build: .
+    build: 
+      context: .
+    mem_limit: 512m
     # command: python manage.py runserver 0.0.0.0:8000
-    command: gunicorn backend.wsgi:application -b 0.0.0.0:8000
+    # command: ["gunicorn", "--timeout", "1000", "--workers=1","-b", "0.0.0.0:8000","--log-level", "debug", "manage"]
 
     volumes:
       - .:/usr/src/app/
@@ -19,7 +21,7 @@ services:
         # redis:
         db:
           condition: service_healthy
-    entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python manage.py collectstatic --noinput && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
+    entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python manage.py collectstatic --noinput && exec gunicorn --timeout 60 --keep-alive 60 --workers=4 -b 0.0.0.0:8000 backend.wsgi:application"
     # entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py loaddata ./user/fixtures/academy_dump_file.json && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
 
     # restart:
@@ -33,6 +35,7 @@ services:
       - .:/usr/src/app/
     depends_on:
       - redis
+      - nginx
 
   db:
     image: mysql
@@ -54,9 +57,10 @@ services:
 
   nginx:
     container_name: nginx
-    build:
+    build: 
       context: .
       dockerfile: nginx/Dockerfile # You need to create this file
+    mem_limit: 512m
     ports:
       - "80:80"
     depends_on:

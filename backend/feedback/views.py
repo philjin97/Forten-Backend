@@ -52,7 +52,7 @@ class FeedbackRegisterAPIView(APIView):
                 'parent_rating': openapi.Schema(type=openapi.TYPE_INTEGER, description='부모 만족도'),
                 'content': openapi.Schema(type=openapi.TYPE_STRING, description='평가 내용'),
             },
-            required=['student_id', 'content'],
+            required=['student_id'],
         ),
         description="학생에 대한 평가를 등록합니다.(컨설턴트가 평가시 부모평가 추가)",
     )
@@ -97,7 +97,6 @@ class FeedbackPutDeleteAPIView(APIView):
                 'parent_rating': openapi.Schema(type=openapi.TYPE_INTEGER, description='부모 만족도'),
                 'content': openapi.Schema(type=openapi.TYPE_STRING, description='평가 내용'),
             },
-            required=['content'],
         ),
         description="회원이 작성한 평가를 수정합니다.",
     )

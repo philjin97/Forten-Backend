@@ -9,6 +9,6 @@ class Feedback(models.Model):
 	student_id = models.ForeignKey(Student, related_name="student_feedback", on_delete=models.CASCADE, null=False, db_column="student_id")
 	student_rating = models.BigIntegerField(null=False)
 	parent_rating = models.BigIntegerField(null=True)
-	content = models.TextField(max_length=500, null=True)
+	content = models.TextField(max_length=500, null=False, blank=True)
 	created_at = models.DateTimeField(auto_now_add=True, null=False)
 	updated_at = models.DateTimeField(auto_now=True, null=True)

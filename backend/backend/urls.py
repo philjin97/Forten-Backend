@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/feedback/', include('feedback.urls')),
     path('api/analysis/', include('analysis.urls')),
     path("__debug__/", include("debug_toolbar.urls")),
+    path('', include('django_prometheus.urls')),
 
     # swagger   
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name="schema-json"),

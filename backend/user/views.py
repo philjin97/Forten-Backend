@@ -205,9 +205,10 @@ class FavoriteAPIView(APIView):
             serialized_favorite = UserFavoriteSerializer(data=data)
 
             if serialized_favorite.is_valid():
-
-                # Celery Task 배정
-                save_prompt_task.delay(student_id)
+                user = User.objects.filter(id=user_id)
+                if user[0].role == "C":
+                    # Celery Task 배정
+                    save_prompt_task.delay(student_id)
 
                 serialized_favorite.save()
                 return Response({

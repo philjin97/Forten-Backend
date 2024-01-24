@@ -180,15 +180,33 @@ class ScoreGetPostAPIView(APIView):
         try:
             # body 데이터 serializer
             scoreList = request.data.get('scoreList', [])
+            for num in range(len(scoreList)):
+                getScore = StudentScore.objects.filter(student_id=student_id,subject_id=scoreList[num]['subject_id'], exam_id=scoreList[num]['exam_id'], grade=scoreList[num]['grade'])
+                if(getScore):
+                    scoreList[num]['score'] = scoreList[num]['score']
+                    scoreList[num]['id'] = getScore[0].id
+
             serialized_scores = ScoretRegisterSerializer(data=scoreList, many=True)
 
             if serialized_scores.is_valid():
                 # 모든 객체에 student_id를 추가
                 for score in serialized_scores.validated_data:
                     score['student_id'] = student
+                    subject_id = score['subject_id']
+                    exam_id = score['exam_id']
+                    grade = score['grade']
+                    defaults = {'score': score['score']}
 
-                # 데이터베이스에 저장
-                serialized_scores.save()
+                    obj, created = StudentScore.objects.update_or_create(
+                        student_id=student,
+                        subject_id=subject_id,
+                        exam_id=exam_id,
+                        grade=grade,
+                        defaults=defaults
+                    )
+
+                    # 업데이트된 객체의 id를 저장합니다.
+                    score['id'] = obj.id
 
                 return Response({
                     'message': '학생 성적이 등록되었습니다.',

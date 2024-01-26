@@ -141,30 +141,48 @@ class Prompt(APIView):
         
         # 없으면 생성
     
-    def post(self, request, student_id):
+    # def post(self, request, student_id):
+    #     student_name = Student.objects.get(id = student_id).name
+    #     comment = cache.get(student_id)
+    #     # Generate PDF using xhtml2pdf
+    #     result = generate_pdf_function(student_name,comment)
+    #     response = HttpResponse(content_type='application/pdf')
+    #     response['Content-Disposition'] = 'attachment; filename="output.pdf"'
+        
+    #     pisa.CreatePDF(result.encode('utf-8'), dest=response, encoding=('utf-8'))
+
+    #     return response
+    
+
+class PDF(APIView):
+
+    @swagger_auto_schema(
+        summary="학생 컨설팅 내용 다운로드",
+        tags=["Feedback"],
+        manual_parameters=[
+            openapi.Parameter('student_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='학생 ID'),
+        ],
+        description="특정 학생의 컨설팅 내용을 PDF로 다운로드합니다.",
+    )
+    def get(self, request, student_id):
         student_name = Student.objects.get(id = student_id).name
         comment = cache.get(student_id)
         # Generate PDF using xhtml2pdf
-        result = generate_pdf_function(student_name,comment)
-        response = HttpResponse(content_type='application/pdf')
+        result = generate_html_function(student_name,comment)
+        response = HttpResponse(content_type='application/pdf; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="output.pdf"'
         
-        pisa.CreatePDF(result.encode('utf-8'), dest=response, encoding=('utf-8'))
+        pisa.CreatePDF(result, dest=response, encoding=('utf-8'))
 
         return response
-    
-def generate_pdf_function(student_name, comment):
+
+
+def generate_html_function(student_name, comment):
 # Write your PDF generation code here
-    html_content = '<html><head><meta charset="UTF-8"></head><body>'
-    # html += '<h1>Invoice</h1>'    
+    html_content = '<html><head><meta charset="UTF-8" /><style>'
+    html_content += 'body { font-family: HYGothic-Medium '
+    html_content += '}</style></head><body>'
     html_content += '<h1>Student Name: ' + student_name + '</h1>'   
     html_content += '<p>Comments' + comment + '</p>'
     html_content += '</body></html>'
     return html_content
-
-        
-                
-
-
-
-                

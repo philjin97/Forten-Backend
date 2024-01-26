@@ -13,6 +13,11 @@ from drf_yasg.utils import swagger_auto_schema
 # from analysis.models import TemporaryPrompt
 from django.core.cache import cache
 # from analysis.tasks import prompt_task
+from django.shortcuts import render
+from xhtml2pdf import pisa
+from django.http import HttpResponse
+from student.models import Student
+from io import BytesIO
 
 
 # Create your views here.
@@ -110,6 +115,7 @@ class Prompt(APIView):
             ]
             )
             response = response.choices[0].message.content
+            cache.set(student_id, response, 60 * 60)
 
             message = {
                 "response": response
@@ -134,9 +140,31 @@ class Prompt(APIView):
             # return Response(message, status.HTTP_200_OK) 
         
         # 없으면 생성
+    
+    def post(self, request, student_id):
+        student_name = Student.objects.get(id = student_id).name
+        comment = cache.get(student_id)
+        # Generate PDF using xhtml2pdf
+        result = generate_pdf_function(student_name,comment)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="output.pdf"'
+        
+        pisa.CreatePDF(result.encode('utf-8'), dest=response, encoding=('utf-8'))
+
+        return response
+    
+def generate_pdf_function(student_name, comment):
+# Write your PDF generation code here
+    html_content = '<html><head><meta charset="UTF-8"></head><body>'
+    # html += '<h1>Invoice</h1>'    
+    html_content += '<h1>Student Name: ' + student_name + '</h1>'   
+    html_content += '<p>Comments' + comment + '</p>'
+    html_content += '</body></html>'
+    return html_content
 
         
-            
+                
 
 
-    
+
+                

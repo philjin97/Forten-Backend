@@ -41,8 +41,12 @@ def save_prompt_pdf_task(student_id):
     scores = StudentScore.objects.filter(student_id=student_id)
     scores_content = ''
     for score in scores:
-        subject = Subject.objects.get(score.subject_id).name
-        scores_content += '과목 : '+ subject + " / 점수 : " + score.score + "\n"
+        try:
+            subject = Subject.objects.get(id=score.subject_id.id)
+        except Subject.DoesNotExist:
+            print("Subject with id does not exist.".format(score.subject_id))
+
+        scores_content += f"과목 : {subject.name} / 점수 : {score.score}\n"
 
     client = openai_secret_key
 

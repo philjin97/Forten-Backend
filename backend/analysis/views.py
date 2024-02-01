@@ -87,7 +87,7 @@ class Prompt(APIView):
     )
     def get(self, request, student_id):
 
-        if  cache.get(student_id) == None:
+        if  cache.get(str(student_id)+"_prompt") == None:
             
             feedbacks = Feedback.objects.filter(student_id=student_id)
 

@@ -1,14 +1,15 @@
+from analysis.tasks import save_prompt_pdf_task, save_prompt_task
 from django.shortcuts import render
-from rest_framework.views import APIView
-from .serializers import UserRegisterSerializer, UserLoginSerializer, UserMemoSerializer, UserFavoriteSerializer, UserFavoriteGetSerializer
-from rest_framework.response import Response
-from rest_framework import status
-from .models import User, Favorite
-from student.models import Student
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from analysis.tasks import save_prompt_task
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from student.models import Student
+
+from .models import Favorite, User
+from .serializers import (UserFavoriteGetSerializer, UserFavoriteSerializer,
+                          UserMemoSerializer, UserRegisterSerializer)
 
 # Create your views here.
 
@@ -50,7 +51,7 @@ class UserRegister(APIView):
                     "message": "회원가입 실패"
                 }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
-       
+
 @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -209,6 +210,7 @@ class FavoriteAPIView(APIView):
                 if user[0].role == "C":
                     # Celery Task 배정
                     save_prompt_task.delay(student_id)
+                    save_prompt_pdf_task.delay(student_id)
 
                 serialized_favorite.save()
                 return Response({

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" ; charset="UTF-8" />
+    <style type="text/css">
+      @page {
+        size: a4;
+        background-image: url("analysis/img/background.jpg");
+      }
+      body {
+        font-family: HYGothic-Medium;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <table border="0" width="80%" height="80%" align="center">
+        <thead></thead>
+        <tbody>
+          <tr align="center" style="padding: 2.5cm 0cm 0.1cm 0cm">
+            <td style="color: #62471b; font-size: 30px">{{student_name}}({{student_age}})</td>
+          </tr>
+          <tr align="center">
+            <td style="color: #62471b; font-size: 18px">{{school}} {{grade}}</td>
+          </tr>
+          <tr align="center" style="padding: 0.5cm 0cm 1cm 0cm">
+            <td><img src="analysis/img/image.jpg" style="zoom: 140%" /></td>
+          </tr>
+          <tr align="center">
+            <td style="color: #795b4c; font-size: 18px; padding: 0cm 0cm 0.5cm 0cm">컨설팅 내용</td>
+          </tr>
+          <tr align="center">
+            <td style="color: #795b4c; font-size: 15px; -pdf-word-wrap: CJK">{{comment}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

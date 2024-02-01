@@ -1,24 +1,25 @@
+import os
+from datetime import datetime
+
+from django.conf import settings
+from django.core.cache import cache
+from django.http import HttpResponse
 from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from student.models import StudentScore
-from feedback.models import Feedback
-from user.models import User
-from .serializers import StudentScoreSerializer
-from openai import OpenAI
-from backend.my_settings import openai_secret_key
+from django.template import loader
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-# from analysis.models import TemporaryPrompt
-from django.core.cache import cache
-# from analysis.tasks import prompt_task
-from django.shortcuts import render
-from xhtml2pdf import pisa
-from django.http import HttpResponse
+from feedback.models import Feedback
 from student.models import Student
-from io import BytesIO
+# from openai import OpenAI
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from xhtml2pdf import pisa
+from rest_framework.parsers import FormParser, MultiPartParser
 
+from backend.my_settings import openai_secret_key
+
+from .tasks import save_prompt_pdf_task
 
 # Create your views here.
 
@@ -72,20 +73,9 @@ class Rating(APIView):
                 "message": "평가 조회 실패"
             }
             return Response(message, status.HTTP_400_BAD_REQUEST)
-# 하나로
-
-# class Score(APIView):
-
-#     def get(self, request, student_id, subject_id):
-#         subject_scores = Student_score.objects.filter(student_id=student_id).filter(subject_id=subject_id)
-
-#         serializer = StudentScoreSerializer(subject_scores, many=True)
-
-#         return Response(serializer.data, status.HTTP_200_OK)
-    
-# student/ ScoreGetPostAPIView
 
 class Prompt(APIView):
+    parser_classes = (MultiPartParser, FormParser)
 
     @swagger_auto_schema(
         summary="학생 프롬프트 조회",
@@ -98,7 +88,7 @@ class Prompt(APIView):
     def get(self, request, student_id):
 
         if  cache.get(student_id) == None:
-
+            
             feedbacks = Feedback.objects.filter(student_id=student_id)
 
             feedbacks_content = ''
@@ -108,81 +98,91 @@ class Prompt(APIView):
             client = openai_secret_key
 
             response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "학부모를 설득해봐."},
-                {"role": "user", "content": f"{feedbacks_content}"}
-            ]
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "학원의 컨설턴트가 되서 학생의 평가를 기반으로 필요한 수업을 추천해주고 수강할 수 있도록 학부모를 설득해봐."},
+                    {"role": "user", "content": f"{feedbacks_content}"}
+                ]
             )
             response = response.choices[0].message.content
-            cache.set(student_id, response, 60 * 60)
 
+            cache.set(str(student_id)+"_prompt", response, 60 * 60)
             message = {
                 "response": response
             }
             
+            save_prompt_pdf_task.delay(student_id)
+
             return Response(message, status.HTTP_200_OK) 
 
         else:
-            prompt = cache.get(student_id)
+            prompt = cache.get(str(student_id)+"_prompt")
             message = {
                 "response": prompt
             }
             return Response(message, status.HTTP_200_OK)
-    
-        # 비동기로 미리 저장된 데이터 확인
-        # 캐시를 스캔
-        # temporary = TemporaryPrompt.objects.filter(student_id=student_id)
-        # if len(temporary) != 0:
-        #     message = {
-        #     "response": temporary[0].prompt
-        #     }
-            # return Response(message, status.HTTP_200_OK) 
-        
-        # 없으면 생성
-    
-    # def post(self, request, student_id):
-    #     student_name = Student.objects.get(id = student_id).name
-    #     comment = cache.get(student_id)
-    #     # Generate PDF using xhtml2pdf
-    #     result = generate_pdf_function(student_name,comment)
-    #     response = HttpResponse(content_type='application/pdf')
-    #     response['Content-Disposition'] = 'attachment; filename="output.pdf"'
-        
-    #     pisa.CreatePDF(result.encode('utf-8'), dest=response, encoding=('utf-8'))
 
-    #     return response
-    
-
-class PDF(APIView):
 
     @swagger_auto_schema(
+        operation_description='Upload file...',
         summary="학생 컨설팅 내용 다운로드",
         tags=["Feedback"],
         manual_parameters=[
             openapi.Parameter('student_id', in_=openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='학생 ID'),
+            openapi.Parameter('image', in_=openapi.IN_FORM, type=openapi.TYPE_FILE, description='그래프'),
+
         ],
+        consumes=["multipart/form-data"],
         description="특정 학생의 컨설팅 내용을 PDF로 다운로드합니다.",
     )
-    def get(self, request, student_id):
-        student_name = Student.objects.get(id = student_id).name
-        comment = cache.get(student_id)
-        # Generate PDF using xhtml2pdf
-        result = generate_html_function(student_name,comment)
-        response = HttpResponse(content_type='application/pdf; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="output.pdf"'
-        
-        pisa.CreatePDF(result, dest=response, encoding=('utf-8'))
 
+    def post(self, request, student_id):
+        student = Student.objects.get(id = student_id)
+        comment = cache.get(str(student_id)+"_pdf")
+
+        if 'image' not in request.FILES:
+            return Response('Empty Content', status=status.HTTP_400_BAD_REQUEST)
+
+        image = request.FILES['image']
+        image_path = os.path.join(settings.BASE_DIR, 'analysis/img/image.jpg')
+
+        try:
+            # 이미지 저장
+            with open(image_path, 'wb') as f:
+                f.write(image.read())
+            # 이미지를 사용한 작업 수행 (예: HTML 생성 등)
+            result = generate_html_function(student, comment)
+            response = HttpResponse(content_type='application/pdf; charset=utf-8')
+            response['Content-Disposition'] = f'attachment; filename="{student.name}.pdf"'
+
+            pisa.CreatePDF(result, dest=response, encoding=('utf-8'))
+
+        finally:
+            # 이미지 저장 후에는 파일을 삭제
+            if os.path.exists(image_path):
+                os.remove(image_path)
+
+        Response(status.HTTP_200_OK) 
         return response
 
 
-def generate_html_function(student_name, comment):
-# Write your PDF generation code here
-    html_content = '<html><head><meta charset="UTF-8" /><style>'
-    html_content += 'body { font-family: HYGothic-Medium '
-    html_content += '}</style></head><body>'
-    html_content += '<h1>Student Name: ' + student_name + '</h1>'   
-    html_content += '<p>Comments' + comment + '</p>'
-    html_content += '</body></html>'
+def generate_html_function(student, comment):
+
+    # 미리 만들어 둔 HTML 파일 로드
+    template = loader.get_template('template.html')
+    
+    student_age = datetime.today().year-int(student.birth)
+    
+    # 템플릿에 전달할 컨텍스트 생성
+    context = {
+        'student_name': student.name,
+        'comment': comment,
+        'student_age' : student_age,
+        'school' : student.school,
+        'grade' : student.grade
+        }
+    
+    # 템플릿 렌더링
+    html_content = template.render(context)
+
     return html_content

@@ -1,9 +1,6 @@
 from backend.my_settings import openai_secret_key
 from feedback.models import Feedback
-# from .models import TemporaryPrompt
-# from .serializers import TemporaryPromptSerializer
-from rest_framework.response import Response
-from rest_framework import status
+from student.models import StudentScore, Subject
 from celery import shared_task
 from django.core.cache import cache
 
@@ -18,42 +15,49 @@ def save_prompt_task(student_id):
     client = openai_secret_key
 
     response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[
-        {"role": "system", "content": "학부모를 설득해봐."},
-        {"role": "user", "content": f"{feedbacks_content}"}
-    ]
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "넌 학원의 컨설턴트야. 학생의 평가를 기반으로 필요한 수업을 추천해주고 수강할 수 있도록 학부모를 설득해봐."},
+            {"role": "user", "content": f"학생의 평가는 {feedbacks_content}"}
+        ]
     )
     response = response.choices[0].message.content
 
-    message = {
-        "student_id": student_id,
-        "prompt": response
-    }
-
-   
-
-    # serializer = TemporaryPromptSerializer(data=message)
-    # if serializer.is_valid():
     try:
-        cache.delete(student_id)
-        cache.set(student_id, response, 60 * 60)
+        cache.delete(str(student_id)+"_prompt")
+        cache.set(str(student_id)+"_prompt", response, 60 * 60)
 
     except:
-        cache.set(student_id, response, 60 * 60)
+        cache.set(str(student_id)+"_prompt", response, 60 * 60)
+    
+    
+@shared_task()
+def save_prompt_pdf_task(student_id):
+    feedbacks = Feedback.objects.filter(student_id=student_id)
+    feedbacks_content = ''
+    for feedback in feedbacks:
+        feedbacks_content += feedback.content
 
-        
-        
-        # try:
-        #     feedback = TemporaryPrompt.objects.get(student_id=student_id)
-        #     serialized_feedback = TemporaryPromptSerializer(feedback, data = message)
-        #     if serialized_feedback.is_valid():
-        #         serialized_feedback.save()
-        #         return Response({"message": serialized_feedback.data}, status.HTTP_200_OK) 
-        #     return Response({"message": "수정 형식에 맞지 않음. 수정 실패"}, status.HTTP_400_BAD_REQUEST)
-        # except:
-        #     serializer.save()
-        #     return Response({"message": serializer.data}, status.HTTP_200_OK) 
-        
-    
-    
+    scores = StudentScore.objects.filter(student_id=student_id)
+    scores_content = ''
+    for score in scores:
+        subject = Subject.objects.get(score.subject_id).name
+        scores_content += '과목 : '+ subject + " / 점수 : " + score.score + "\n"
+
+    client = openai_secret_key
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "넌 학원에서 학생의 담당선생님이야. 학생의 성적과 평가를 참고해서 학부모가 학원에 신뢰를 가질 수 있도록 학생을 좋은 쪽으로 평가해줘"},
+            {"role": "user", "content": f"학생의 평가는 {feedbacks_content}, 학생의 점수는 {scores_content}입니다."}
+        ]
+    )
+    response = response.choices[0].message.content
+
+    try:
+        cache.delete(str(student_id)+"_pdf")
+        cache.set(str(student_id)+"_pdf", response, 60 * 60)
+
+    except:
+        cache.set(str(student_id)+"_pdf", response, 60 * 60)

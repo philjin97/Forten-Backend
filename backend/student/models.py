@@ -45,8 +45,8 @@ class StudentScore(models.Model):
   ]
   id = models.AutoField(primary_key=True)
   student_id = models.ForeignKey(Student, related_name="student_studentScore", on_delete=models.CASCADE, null=False, db_column="student_id")
-  subject_id = models.ForeignKey(Subject, related_name="subject_studentScore", on_delete=models.CASCADE, null=False, db_column="exam_id")
-  exam_id = models.ForeignKey(Exam, related_name="exam", on_delete=models.CASCADE, null=False)
+  subject_id = models.ForeignKey(Subject, related_name="subject_studentScore", on_delete=models.CASCADE, null=False, db_column="subject_id")
+  exam_id = models.ForeignKey(Exam, related_name="exam_studentScore", on_delete=models.CASCADE, null=False, db_column="exam_id")
   type = models.CharField(choices=TYPE,max_length=20, null=False)
   score = models.BigIntegerField(null=False)
   grade = models.CharField(max_length=20, null=False)

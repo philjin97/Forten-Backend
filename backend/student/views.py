@@ -1,16 +1,13 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Q
-
-from drf_yasg.utils import swagger_auto_schema
+# from django.db.models import Q
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from user.models import User
 
 from .serializers import *
-import logging
 
-from user.models import User
 
 class StudentGetPostAPIView(APIView):
     # 학생 조회
@@ -25,7 +22,6 @@ class StudentGetPostAPIView(APIView):
         description="학생 아이디 혹은 검색어(이름/학교)로 학생 정보를 조회하고 해당 학생에 대한 피드백 여부를 확인합니다.",
     )
     def get(self, request):
-        # 쿼리 매개변수 가져오기
         user_id = request.GET.get('id', '')
         try:
             user = User.objects.get(id=user_id)
@@ -37,7 +33,6 @@ class StudentGetPostAPIView(APIView):
 
         students = None
         try:
-            # 데이터베이스 조회
             if student_id:
                 students = Student.objects.filter(id=student_id)
             elif search:
@@ -45,7 +40,6 @@ class StudentGetPostAPIView(APIView):
             else:
                 students = Student.objects.filter()
 
-            # 결과 직렬화
             serialized_students = StudentSerializer(students, many=True).data
 
             for student in serialized_students:
@@ -84,13 +78,10 @@ class StudentGetPostAPIView(APIView):
     )
     def post(self, request):
         try:
-            # body 데이터 serializer
             serialized_student = StudentRegisterSerializer(data=request.data)
 
             if serialized_student.is_valid():
                 serialized_student.save()
-                # 로깅
-                logging.info(serialized_student.data)
                 return Response({
                     'message': '학생이 등록되었습니다.',
                     'result': serialized_student.data
@@ -119,17 +110,14 @@ class ScoreGetPostAPIView(APIView):
         description="특정 학생의 성적을 (과목별로) 조회합니다.",
     )
     def get(self, request, student_id):
-        # 쿼리 매개변수 가져오기
         subject_id = request.GET.get('subject_id', '')
         scores = None
         try:
-            # 데이터베이스 조회
             if subject_id:
                 scores = StudentScore.objects.filter(student_id=student_id,subject_id=subject_id)
             else:
                 scores = StudentScore.objects.filter(student_id=student_id)
 
-            # 결과 직렬화
             serialized_scores = ScoreSerializer(scores, many=True)
 
             return Response({
@@ -178,7 +166,6 @@ class ScoreGetPostAPIView(APIView):
             return Response({"message": "존재하지 않는 학생입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # body 데이터 serializer
             scoreList = request.data.get('scoreList', [])
             for num in range(len(scoreList)):
                 getScore = StudentScore.objects.filter(student_id=student_id,subject_id=scoreList[num]['subject_id'], exam_id=scoreList[num]['exam_id'], grade=scoreList[num]['grade'])
@@ -189,7 +176,6 @@ class ScoreGetPostAPIView(APIView):
             serialized_scores = ScoretRegisterSerializer(data=scoreList, many=True)
 
             if serialized_scores.is_valid():
-                # 모든 객체에 student_id를 추가
                 for score in serialized_scores.validated_data:
                     score['student_id'] = student
                     subject_id = score['subject_id']

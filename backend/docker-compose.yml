@@ -11,25 +11,18 @@ services:
 
   django:
     container_name: django
-    build: 
+    build:
       context: .
     mem_limit: 512m
-    # command: python manage.py runserver 0.0.0.0:8000
-    # command: ["gunicorn", "--timeout", "1000", "--workers=1","-b", "0.0.0.0:8000","--log-level", "debug", "manage"]
 
     volumes:
       - .:/usr/src/app/
     ports:
       - "8000:8000"
     depends_on:
-        # redis:
-        db:
-          condition: service_healthy
+      db:
+        condition: service_healthy
     entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python manage.py collectstatic --noinput && exec gunicorn --timeout 90 --keep-alive 90 --workers=4 -b 0.0.0.0:8000 backend.wsgi:application"
-    # entrypoint: sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py loaddata ./user/fixtures/academy_dump_file.json && exec gunicorn backend.wsgi:application -b 0.0.0.0:8000"
-
-    # restart:
-    #   always
 
   celery:
     container_name: celery
@@ -61,9 +54,9 @@ services:
 
   nginx:
     container_name: nginx
-    build: 
+    build:
       context: .
-      dockerfile: nginx/Dockerfile # You need to create this file
+      dockerfile: nginx/Dockerfile
     mem_limit: 512m
     ports:
       - "80:80"
@@ -76,10 +69,10 @@ services:
       - ./prometheus/:/etc/prometheus/
       - ./prometheus/data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
     ports:
       - 9090:9090
     networks:
@@ -87,59 +80,54 @@ services:
     restart: always
 
   node-exporter:
-      image: prom/node-exporter
-      volumes:
-        - /proc:/host/proc:ro
-        - /sys:/host/sys:ro
-        - /:/rootfs:ro
-      command:
-        - '--path.procfs=/host/proc'
-        - '--path.sysfs=/host/sys'
-        - --collector.filesystem.ignored-mount-points
-        - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-      ports:
-        - 9100:9100
-      restart: always
-      networks:
-        - monitoring
+    image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - 9100:9100
+    restart: always
+    networks:
+      - monitoring
 
   alertmanager:
-      image: prom/alertmanager
-      ports:
-        - 9093:9093
-      volumes:
-        - ./alertmanager/:/etc/alertmanager/
-      networks:
-        - monitoring
-      restart: always
-      # command:
-      #   - '--config.file=/etc/alertmanager/config.yml'
-      #   - '--storage.path=/alertmanager'
+    image: prom/alertmanager
+    ports:
+      - 9093:9093
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    networks:
+      - monitoring
+    restart: always
 
   cadvisor:
-      image: google/cadvisor
-      volumes:
-        - /:/rootfs:ro
-        - /var/run:/var/run:rw
-        - /sys:/sys:ro
-        - /var/lib/docker/:/var/lib/docker:ro
-      ports:
-        - 8080:8080
-      networks:
-        - monitoring
-      restart: always
-
+    image: google/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8080:8080
+    networks:
+      - monitoring
+    restart: always
 
   grafana:
-      image: grafana/grafana
-      # user: "472"
-      depends_on:
-        - prometheus
-      ports:
-        - 3000:3000
-      volumes:
-        - ./grafana/data:/var/lib/grafana
-        - ./grafana/provisioning/:/etc/grafana/provisioning/
-      networks:
-        - monitoring
-      restart: always
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - monitoring
+    restart: always

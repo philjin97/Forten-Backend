@@ -1,13 +1,11 @@
 from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .serializers import *
-import logging
 
 # Create your views here.
 class FeedbackGetAPIView(APIView):
@@ -59,7 +57,7 @@ class FeedbackRegisterAPIView(APIView):
     def post(self, request, user_id):
         try:
             data = request.data
-            data['user_id'] = user_id  # 추가: 등록한 회원의 ID
+            data['user_id'] = user_id
             serialized_feedback = FeedbackRegisterSerializer(data=data)
 
             if serialized_feedback.is_valid():
@@ -112,7 +110,7 @@ class FeedbackPutDeleteAPIView(APIView):
 
         serialized_feedback = FeedbackRegisterSerializer(feedback, data=data)
         if serialized_feedback.is_valid():
-            serialized_feedback.save() # 데이터베이스에 저장
+            serialized_feedback.save()
             return Response({
                 'message': '평가가 수정되었습니다.',
                 'result': serialized_feedback.data
